@@ -50,3 +50,9 @@ We believe the main drivers of quality will be chlorides, sulfur dioxide, and ac
 | pH | pH level of the wine |
 | alcohol | Alcohol percentage in the wine |
 | type | Red or white wine | 
+
+
+## Recommendations
+- Free and Total Sulfur Dioxide are good metrics for determining quality.
+- Citric acid had a positive relationship with quality.
+- pH did not have a high correlation with quality.
