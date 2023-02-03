@@ -11,6 +11,9 @@ We are part of a data science team using the wine data set to develop a machine 
 ## Questions to answer
 - Does a higher content of Free Sulfer Dioxide lead to a higher quality wine?
 - Do reds wines have a lower content of Sulfur Dioxide compared to white wines?
+- Do higher quality wines have a higher content of citric acid?
+- Does higher contents of total suflur dioxider lead to a higher pH level?
+
 
 
 ## Initial Thoughts and Hypothesis
@@ -47,3 +50,15 @@ We believe the main drivers of quality will be chlorides, sulfur dioxide, and ac
 | pH | pH level of the wine |
 | alcohol | Alcohol percentage in the wine |
 | type | Red or white wine | 
+
+
+## Recommendations
+- Free and Total Sulfur Dioxide are good metrics for determining quality.
+- Citric acid had a positive relationship with quality.
+- pH did not have a high correlation with quality.
+
+
+## Next Steps
+- We would investigate the relationship between chlorides and quality.
+- We would look into how sugar effected the quality of wines.
+- Look into why there were significantly more white wines vs red wines.

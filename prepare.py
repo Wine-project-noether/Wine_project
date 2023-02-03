@@ -162,8 +162,8 @@ def remove_outliers(df, num=8, k=1.5):
                     col_list.append(col)
                 else:
                     print(f'{col} is not a float or int')
-            else:
-                print(f'{col} column ignored')
+            #else:
+                #print(f'{col} column ignored')
 
     # for loop used to remove the data deemed unecessary 
     for col in col_list:
