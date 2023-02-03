@@ -98,6 +98,9 @@ def citric_plot(df, col):
     
     sns.violinplot(x='quality', y=col, data=df, palette='Set2', saturation=1)
     plt.axhline(df[col].mean(), linestyle='--', label='Citric Acid Mean')
+    plt.ylabel('Citric Content')
+    plt.xlabel('Quality')
+    plt.title('Comparing Citric Content to the Wine Quality')
     plt.legend()
     plt.show()
     
@@ -121,7 +124,7 @@ def so2_ph_plot(df, col1, col2):
     
 
 
-# In[16]:
+# In[22]:
 
 
 def ttest(df, col, comp_col, comp_split):
@@ -142,19 +145,39 @@ def ttest(df, col, comp_col, comp_split):
     t, p = stats.ttest_1samp(sample, overall_mean)
     
     # if statement to determine whether t value needs to be above or below 0
-    if col == 'tso2':
-        
-        if (p/2 < alpha) & (t < 0):
-            print("We reject the null.")
-        else:
-            print("We fail to reject the null.")
-    
+    if (p/2 < alpha) and (t > 0):
+        print("We reject the null.")
     else:
+        print("We fail to reject the null.")
         
-        if (p/2 < alpha) & (t > 0):
-            print("We reject the null.")
-        else:
-            print("We fail to reject the null.")
+
+
+# In[21]:
+
+
+def ttest_type(df, col, comp_col, comp_split):    
+    
+    '''
+    This function takes a data frame, column, comparison column and where to split the comparison column.
+    It separates the comparison column on the split given and runs a one sample t-test comparing the 
+    data of the column above the split to the overall mean.
+    '''
+    
+    alpha = .05
+    
+    # determining the sample and the overall mean
+    sample = df[df[comp_col]==comp_split][col]
+    overall_mean = df[col].mean()
+    
+    # running the ttest 
+    t, p = stats.ttest_1samp(sample, overall_mean)
+    
+    # if statement to determine whether t value needs to be above or below 0
+    if (p/2 < alpha) and (t < 0):
+        print("We reject the null.")
+    else:
+        print("We fail to reject the null.")
+        
 
 
 # In[17]:
@@ -233,14 +256,13 @@ def find_k(X_train, cluster_vars, k_range):
                              delta=delta, 
                              pct_delta=pct_delta))
 
-    # plot k with inertia
-    plt.plot(k_comparisons_df.k, k_comparisons_df.sse, 'bx-')
+    # plot k with pct_delta
+    plt.plot(k_comparisons_df.k, k_comparisons_df.pct_delta, 'bx-')
     plt.xlabel('k')
-    plt.ylabel('SSE')
-    plt.title('The Elbow Method to find the optimal k\nFor which k values do we see large decreases in SSE?')
+    plt.ylabel('Percent Change')
+    plt.title('For which k values are we seeing increased changes (%) in SSE?')
     plt.show()
 
-    return k_comparisons_df
 
 
 # In[3]:
@@ -315,13 +337,17 @@ def cluster_so2(X):
     k = 5
     
     # creatings clusters
-    kmeans = create_clusters(X[0], k, cluster_vars)
+    kmeans = create_clusters(X, k, cluster_vars)
     
     # creating centroids
     centroid_df_so2 = get_centroids(kmeans, cluster_vars, cluster_name)
     
     # adding clusters and centroids to X data frames
-    X = assign_clusters(kmeans, cluster_vars, cluster_name, centroid_df_so2)
+    X = assign_clusters(kmeans, cluster_vars, cluster_name, centroid_df_so2, X)
+    
+    X[0].drop(columns=['centroid_fso2','centroid_tso2'], inplace=True)
+    X[1].drop(columns=['centroid_fso2','centroid_tso2'], inplace=True)
+    X[2].drop(columns=['centroid_fso2','centroid_tso2'], inplace=True)
     
     return X
 
@@ -342,13 +368,17 @@ def cluster_acids(X):
     k = 3
     
     # creating clusters
-    kmeans = create_clusters(X[0], k, cluster_vars)
+    kmeans = create_clusters(X, k, cluster_vars)
     
     #creating centroids
     centroid_df_acid = get_centroids(kmeans, cluster_vars, cluster_name)
     
     # adding clusters and centroids to X data frames
-    X = assign_clusters(kmeans, cluster_vars, cluster_name, centroid_df_acid)
+    X = assign_clusters(kmeans, cluster_vars, cluster_name, centroid_df_acid, X)
+    
+    X[0].drop(columns=['centroid_fixed','centroid_volatile','centroid_citric'], inplace=True)
+    X[1].drop(columns=['centroid_fixed','centroid_volatile','centroid_citric'], inplace=True)
+    X[2].drop(columns=['centroid_fixed','centroid_volatile','centroid_citric'], inplace=True)
     
     return X
 
@@ -369,13 +399,17 @@ def cluster_visc(X):
     k = 5 
     
     # creating clusters
-    kmeans = create_clusters(X[0], k, cluster_vars)
+    kmeans = create_clusters(X, k, cluster_vars)
     
     # creating centroids
     centroid_df_visc = get_centroids(kmeans, cluster_vars, cluster_name)
     
     # addign clusters and centroids to X data frames
-    X = assign_clusters(kmeans, cluster_vars, cluster_name, centroid_df_visc)
+    X = assign_clusters(kmeans, cluster_vars, cluster_name, centroid_df_visc, X)
+    
+    X[0].drop(columns=['centroid_density','centroid_alcohol'], inplace=True)
+    X[1].drop(columns=['centroid_density','centroid_alcohol'], inplace=True)
+    X[2].drop(columns=['centroid_density','centroid_alcohol'], inplace=True)
     
     return X
 

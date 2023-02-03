@@ -11,6 +11,9 @@ We are part of a data science team using the wine data set to develop a machine 
 ## Questions to answer
 - Does a higher content of Free Sulfer Dioxide lead to a higher quality wine?
 - Do reds wines have a lower content of Sulfur Dioxide compared to white wines?
+- Do higher quality wines have a higher content of citric acid?
+- Does higher contents of total suflur dioxider lead to a higher pH level?
+
 
 
 ## Initial Thoughts and Hypothesis
