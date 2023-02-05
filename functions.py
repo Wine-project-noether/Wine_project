@@ -272,7 +272,6 @@ def find_k(X_train, cluster_vars, k_range):
     plt.show()
 
 
-
 # In[12]:
 
 
@@ -289,7 +288,6 @@ def create_clusters(X, k, cluster_vars):
     kmeans.fit(X[0][cluster_vars])
 
     return kmeans
-
 
 
 # In[13]:
@@ -311,7 +309,6 @@ def get_centroids(kmeans, cluster_vars, cluster_name):
     return centroid_df
 
 
-
 # In[14]:
 
 
@@ -329,7 +326,6 @@ def assign_clusters(kmeans, cluster_vars, cluster_name, centroid_df, X):
 
         X[i] = pd.concat([X[i], clusters_centroids], axis=1)
     return X
-
 
 
 # In[15]:
@@ -464,6 +460,67 @@ def visc_cluster_plot(X, y_train, col, cluster):
     plt.show()
 
 
+# # Decision Tree Model
+
+# In[ ]:
+
+
+def decision_tree(X_train, y_train, X_val, y_val):
+    '''
+    Takes in x and y to make a plot for each score of x and y train
+    '''
+    
+    tree_train = []
+    tree_val = []
+    depth = []
+    for i in range(2, 21):
+        train_tree = DecisionTreeClassifier(max_depth=i, random_state=42)
+        train_tree = train_tree.fit(X_train, y_train)
+
+        tree_train.append(train_tree.score(X_train, y_train))
+        tree_val.append(train_tree.score(X_val, y_val))
+        depth.append(i)
+    
+        # Creating the rfc_dataframe
+    tree_scores = pd.DataFrame({'score':tree_train,
+                           'type':'train',
+                           'depth':depth})
+    #Creating val_rfc_score_df
+    val_tree_scores = pd.DataFrame({'score':tree_val,
+                                   'type':'val',
+                                   'depth':depth})
+    #Creating rfc_score_df
+    tree_scores = tree_scores.append(val_tree_scores)
+    # train scores loc of ref_score_df
+    train_acc=tree_scores.loc[tree_scores['type'] == 'train']
+    # val scores loc of ref_score_df
+    val_acc=tree_scores.loc[tree_scores['type'] == 'val']
+    # train depth loc of rfc_score_df
+    train_depth=tree_scores.loc[tree_scores['type']== 'train']['depth']
+    # val depth loc of rfc_score_df
+    val_depth=tree_scores.loc[tree_scores['type']== 'val']['depth']
+    # rfc_scre_df 
+    tree_score_df= pd.DataFrame(
+        {'train_score': train_acc.score,
+        'val_score': val_acc.score,
+         'train_depth': train_depth,
+         'val_depth' : val_depth
+        })
+    # plot f, ax
+    f, ax = plt.subplots(1, 1)
+    
+    #setting the title of chart
+    plt.title("Decision Tree Accuracy and Depth Chart")
+    # plotting the data
+    sns.pointplot(data =tree_score_df, x='train_depth', y='train_score', label='Train',color='royalblue')
+    sns.pointplot(data =tree_score_df, x='val_depth', y='val_score', label='Val', color="seagreen")
+    # setting the labels
+    plt.ylabel('score')
+    plt.xlabel('depth')
+    #Showing the graph
+    plt.show()
+
+
 # # Random Forest Classifier model function
 
 # In[21]:
@@ -528,7 +585,6 @@ def random_for_class(X_train, y_train, X_val, y_val):
     # setting the labels
     plt.ylabel('score')
     plt.xlabel('depth')
-    ax.legend()
     #Showing the graph
     plt.show()
 
@@ -548,7 +604,6 @@ def xgb_score(X_train, y_train, X_val, y_val):
     
     y_train = le.fit_transform(y_train)
     y_val = le.transform(y_val)
-    y_test = le.transform(y_test)
     
     for i in range(2,10):
         
@@ -583,7 +638,7 @@ def xgb_score(X_train, y_train, X_val, y_val):
     
     train_acc=xgb_scores.loc[xgb_scores['type'] == 'train']
     # val scores loc of ref_score_df
-    xgb_acc=xgb_scores.loc[xgb_scores['type'] == 'val']
+    val_acc=xgb_scores.loc[xgb_scores['type'] == 'val']
     # train depth loc of rfc_score_df
     train_depth=xgb_scores.loc[xgb_scores['type']== 'train']['depth']
     # val depth loc of rfc_score_df
@@ -604,7 +659,6 @@ def xgb_score(X_train, y_train, X_val, y_val):
     # setting the labels
     plt.ylabel('score')
     plt.xlabel('depth')
-    ax.legend()
     plt.show()
 
 
@@ -665,7 +719,6 @@ def knn_scores(X_train, y_train, X_val, y_val):
     plt.xlabel('Depth')
     plt.ylabel('Score')
     plt.xlim(0, 20)
-    ax.legend()
     #Showing the graph
     plt.show()
 
@@ -679,8 +732,9 @@ def model_function_train_val(X_train, y_train, X_val, y_val):
     '''
     Function that returns the plot the accuracy of each model with the x/y train and x/y validate
     '''
+    tree = decision_tree(X_train, y_train, X_val, y_val)
     rfc = random_for_class(X_train, y_train, X_val, y_val)
-    logreg= log_reg_class(X_train, y_train, X_val, y_val)
+    xgb = xgb_score(X_train, y_train, X_val, y_val)
     knn = knn_scores(X_train, y_train, X_val, y_val)
     
 
@@ -695,6 +749,12 @@ def test_score(X_train, y_train, X_test, y_test):
     Test Score function that 
     shows the Test Score Accuracy from XGB Classifier
     '''
+    
+    le = LabelEncoder()
+    
+    y_train = le.fit_transform(y_train)
+    y_test = le.transform(y_test)
+    
     # XGB Boost Classifer
     xgb = XGBClassifier(objective='multi:softmax',
                            seed=42,
@@ -707,15 +767,13 @@ def test_score(X_train, y_train, X_test, y_test):
                            max_leaves=4,
                            subsample=.6,
                            n_estimators=300)
-
-    xgb.fit(X_train, y_train)
     
     # fitting the model on the x/y-train
     xgb.fit(X_train, y_train)
     # Score of the x/y-test
     score= xgb.score(X_test, y_test)
     #returning the score
-    return score
+    print(f'The final test score is {score:.2f}')
 
 
 # # Test Against Baseline function
@@ -723,22 +781,48 @@ def test_score(X_train, y_train, X_test, y_test):
 # In[26]:
 
 
-def test_baseline(X_train, y_train, X_test, y_test):
+def test_baseline(X_train, y_train, X_test, y_test, wine):
     '''
     Test Score Against Baseline function that 
     shows the plot of the Test Score Accuracy from RFC to our Baseline Model
     '''
+    
+    le = LabelEncoder()
+    
+    y_train = le.fit_transform(y_train)
+    y_test = le.transform(y_test)
+    
+    # XGB Boost Classifer
+    xgb = XGBClassifier(objective='multi:softmax',
+                           seed=42,
+                           max_depth=8,
+                           learning_rate=.2,
+                           gamma=.5,
+                           reg_alpha=.75,
+                           reg_lambda=.25,
+                           min_child_weight=5,
+                           max_leaves=4,
+                           subsample=.6,
+                           n_estimators=300)
+    
+    # fitting the model on the x/y-train
+    xgb.fit(X_train, y_train)
+    # Score of the x/y-test
+    score= xgb.score(X_test, y_test)
+    
+    baseline = (wine['quality']==6).mean()
     # Creating DataFrame of test score and baseline columns and values
-    test_base_df=pd.DataFrame({'Test Score': [test_score(X_train, y_train, X_test, y_test)],
+    test_base_df=pd.DataFrame({'Test Score': [score],
                           'Baseline': [baseline]})
     # plot f, ax
-    f, ax = plt.subplot()
+    f, ax = plt.subplots(figsize=(8,6))
     #Setting the title of chart
     plt.title("Test Score Against Baseline Score")
     # plotting the data
-    sns.barplot(data=test_base_df, palette='viridis')
+    bplot = sns.barplot(data=test_base_df, palette='viridis')
     # setting the labels
     plt.ylabel('Score')
+    ax.bar_label(bplot.containers[0], padding=4, fmt='%.2f')
     #Showing the graph
     plt.show()
 
