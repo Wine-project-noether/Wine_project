@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[10]:
+# In[1]:
 
 
 import pandas as pd
@@ -18,8 +18,16 @@ from scipy import stats
 from sklearn.cluster import KMeans
 from sklearn.cluster import DBSCAN
 
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
 
-# In[11]:
+from xgboost import XGBClassifier
+from sklearn.preprocessing import LabelEncoder
+
+
+# In[2]:
 
 
 def wrangle_wine():
@@ -47,7 +55,7 @@ def wrangle_wine():
     return df
 
 
-# In[12]:
+# In[3]:
 
 
 def fso2_plot(df, col):
@@ -65,7 +73,7 @@ def fso2_plot(df, col):
     plt.show()
 
 
-# In[13]:
+# In[4]:
 
 
 def tso2_plot(df, col):
@@ -86,7 +94,7 @@ def tso2_plot(df, col):
     plt.show()
 
 
-# In[14]:
+# In[5]:
 
 
 def citric_plot(df, col):
@@ -106,7 +114,7 @@ def citric_plot(df, col):
     
 
 
-# In[15]:
+# In[6]:
 
 
 def so2_ph_plot(df, col1, col2):
@@ -124,7 +132,7 @@ def so2_ph_plot(df, col1, col2):
     
 
 
-# In[22]:
+# In[7]:
 
 
 def ttest(df, col, comp_col, comp_split):
@@ -152,7 +160,7 @@ def ttest(df, col, comp_col, comp_split):
         
 
 
-# In[21]:
+# In[8]:
 
 
 def ttest_type(df, col, comp_col, comp_split):    
@@ -180,7 +188,7 @@ def ttest_type(df, col, comp_col, comp_split):
         
 
 
-# In[17]:
+# In[9]:
 
 
 def pearson_test(df, col1, col2):
@@ -204,7 +212,7 @@ def pearson_test(df, col1, col2):
         
 
 
-# In[18]:
+# In[10]:
 
 
 def split_scale(df):
@@ -224,7 +232,7 @@ def split_scale(df):
     return X_train, y_train, X_val, y_val, X_test, y_test
 
 
-# In[2]:
+# In[11]:
 
 
 def find_k(X_train, cluster_vars, k_range):
@@ -265,7 +273,7 @@ def find_k(X_train, cluster_vars, k_range):
 
 
 
-# In[3]:
+# In[12]:
 
 
 def create_clusters(X, k, cluster_vars):
@@ -283,7 +291,8 @@ def create_clusters(X, k, cluster_vars):
     return kmeans
 
 
-# In[4]:
+
+# In[13]:
 
 
 def get_centroids(kmeans, cluster_vars, cluster_name):
@@ -302,7 +311,8 @@ def get_centroids(kmeans, cluster_vars, cluster_name):
     return centroid_df
 
 
-# In[5]:
+
+# In[14]:
 
 
 def assign_clusters(kmeans, cluster_vars, cluster_name, centroid_df, X):
@@ -321,7 +331,8 @@ def assign_clusters(kmeans, cluster_vars, cluster_name, centroid_df, X):
     return X
 
 
-# In[20]:
+
+# In[15]:
 
 
 def cluster_so2(X):
@@ -345,14 +356,10 @@ def cluster_so2(X):
     # adding clusters and centroids to X data frames
     X = assign_clusters(kmeans, cluster_vars, cluster_name, centroid_df_so2, X)
     
-    X[0].drop(columns=['centroid_fso2','centroid_tso2'], inplace=True)
-    X[1].drop(columns=['centroid_fso2','centroid_tso2'], inplace=True)
-    X[2].drop(columns=['centroid_fso2','centroid_tso2'], inplace=True)
-    
     return X
 
 
-# In[21]:
+# In[16]:
 
 
 def cluster_acids(X):
@@ -376,14 +383,10 @@ def cluster_acids(X):
     # adding clusters and centroids to X data frames
     X = assign_clusters(kmeans, cluster_vars, cluster_name, centroid_df_acid, X)
     
-    X[0].drop(columns=['centroid_fixed','centroid_volatile','centroid_citric'], inplace=True)
-    X[1].drop(columns=['centroid_fixed','centroid_volatile','centroid_citric'], inplace=True)
-    X[2].drop(columns=['centroid_fixed','centroid_volatile','centroid_citric'], inplace=True)
-    
     return X
 
 
-# In[22]:
+# In[17]:
 
 
 def cluster_visc(X):
@@ -407,14 +410,10 @@ def cluster_visc(X):
     # addign clusters and centroids to X data frames
     X = assign_clusters(kmeans, cluster_vars, cluster_name, centroid_df_visc, X)
     
-    X[0].drop(columns=['centroid_density','centroid_alcohol'], inplace=True)
-    X[1].drop(columns=['centroid_density','centroid_alcohol'], inplace=True)
-    X[2].drop(columns=['centroid_density','centroid_alcohol'], inplace=True)
-    
     return X
 
 
-# In[24]:
+# In[18]:
 
 
 def tso2_cluster_plot(X, y_train, col, cluster):
@@ -431,7 +430,7 @@ def tso2_cluster_plot(X, y_train, col, cluster):
     plt.show()
 
 
-# In[25]:
+# In[19]:
 
 
 def acid_cluster_plot(X, y_train, col, cluster):
@@ -448,7 +447,7 @@ def acid_cluster_plot(X, y_train, col, cluster):
     plt.show()
 
 
-# In[26]:
+# In[20]:
 
 
 def visc_cluster_plot(X, y_train, col, cluster):
@@ -465,8 +464,281 @@ def visc_cluster_plot(X, y_train, col, cluster):
     plt.show()
 
 
-# In[ ]:
+# # Random Forest Classifier model function
+
+# In[21]:
 
 
+def random_for_class(X_train, y_train, X_val, y_val):
+    '''
+    Takes in x and y train to make a plot of each score of xand y train
+    '''
+    rfc_train = [] #Empty List
+    rfc_val = []
+    depth = []
+    
+    for i in range(2, 21): # Range of 2-21 and each value inbetween
+        # Random Forest Classifier
+        rf = RandomForestClassifier(bootstrap=True, 
+                                    class_weight=None, 
+                                    criterion='gini',
+                                    min_samples_leaf=3,
+                                    n_estimators=100,
+                                    max_depth=i, 
+                                    random_state=42)
+        # Fitting the Xtrain and ytrain for the model
+        rf.fit(X_train, y_train)
+        # Creating values for empty lists
+        rfc_train.append(rf.score(X_train, y_train))
+        rfc_val.append(rf.score(X_val, y_val))
+        depth.append(i)
+    # Creating the rfc_dataframe
+    rfc_scores = pd.DataFrame({'score':rfc_train,
+                           'type':'train',
+                           'depth':depth})
+    #Creating val_rfc_score_df
+    val_rfc_scores = pd.DataFrame({'score':rfc_val,
+                                   'type':'val',
+                                   'depth':depth})
+    #Creating rfc_score_df
+    rfc_scores = rfc_scores.append(val_rfc_scores)
+    # train scores loc of ref_score_df
+    train_acc=rfc_scores.loc[rfc_scores['type'] == 'train']
+    # val scores loc of ref_score_df
+    val_acc=rfc_scores.loc[rfc_scores['type'] == 'val']
+    # train depth loc of rfc_score_df
+    train_depth=rfc_scores.loc[rfc_scores['type']== 'train']['depth']
+    # val depth loc of rfc_score_df
+    val_depth=rfc_scores.loc[rfc_scores['type']== 'val']['depth']
+    # rfc_scre_df 
+    rfc_score_df= pd.DataFrame(
+        {'train_score': train_acc.score,
+        'val_score': val_acc.score,
+         'train_depth': train_depth,
+         'val_depth' : val_depth
+        })
+    # plot f, ax
+    f, ax = plt.subplots(1, 1)
+    
+    #setting the title of chart
+    plt.title("Random Forest Classifier Accuracy and Depth Chart")
+    # plotting the data
+    sns.pointplot(data =rfc_score_df, x='train_depth', y='train_score', label='Train',color='royalblue')
+    sns.pointplot(data =rfc_score_df, x='val_depth', y='val_score', label='Val', color="seagreen")
+    # setting the labels
+    plt.ylabel('score')
+    plt.xlabel('depth')
+    ax.legend()
+    #Showing the graph
+    plt.show()
 
+
+# # XGB Classifer Model Function
+
+# In[22]:
+
+
+def xgb_score(X_train, y_train, X_val, y_val):
+    
+    train_scores = []
+    val_scores = []
+    depth = []
+    
+    le = LabelEncoder()
+    
+    y_train = le.fit_transform(y_train)
+    y_val = le.transform(y_val)
+    y_test = le.transform(y_test)
+    
+    for i in range(2,10):
+        
+        xgb = XGBClassifier(objective='multi:softmax',
+                           seed=42,
+                           max_depth=i,
+                           learning_rate=.2,
+                           gamma=.5,
+                           reg_alpha=.75,
+                           reg_lambda=.25,
+                           min_child_weight=5,
+                           max_leaves=4,
+                           subsample=.6,
+                           n_estimators=300)
+
+        xgb.fit(X_train, y_train)
+        
+        train_scores.append(xgb.score(X_train, y_train))
+        val_scores.append(xgb.score(X_val, y_val))
+        depth.append(i)
+        
+        
+    xgb_scores = pd.DataFrame({'score':train_scores,
+                               'type':'train',
+                               'depth':depth})
+    #Creating val_rfc_score_df
+    val_xgb_scores = pd.DataFrame({'score':val_scores,
+                                   'type':'val',
+                                   'depth':depth})
+    
+    xgb_scores = xgb_scores.append(val_xgb_scores)
+    
+    train_acc=xgb_scores.loc[xgb_scores['type'] == 'train']
+    # val scores loc of ref_score_df
+    xgb_acc=xgb_scores.loc[xgb_scores['type'] == 'val']
+    # train depth loc of rfc_score_df
+    train_depth=xgb_scores.loc[xgb_scores['type']== 'train']['depth']
+    # val depth loc of rfc_score_df
+    val_depth=xgb_scores.loc[xgb_scores['type']== 'val']['depth']
+    # rfc_scre_df 
+    xgb_score_df= pd.DataFrame(
+        {'train_score': train_acc.score,
+        'val_score': val_acc.score,
+         'train_depth': train_depth,
+         'val_depth' : val_depth
+        })
+
+    plt.title('XGBoost Classifier Accuracy and Depth Chart')
+    
+    sns.pointplot(data =xgb_score_df, x='train_depth', y='train_score', label='Train',color='royalblue')
+    sns.pointplot(data =xgb_score_df, x='val_depth', y='val_score', label='Val', color="seagreen")
+    
+    # setting the labels
+    plt.ylabel('score')
+    plt.xlabel('depth')
+    ax.legend()
+    plt.show()
+
+
+# # KNN Scores
+
+# In[23]:
+
+
+def knn_scores(X_train, y_train, X_val, y_val):
+    '''
+    Takes in x-train, y-train, x-val, and y-val 
+    to make a plot of each score of x/y train and x/y val
+    '''
+    #Empty lists
+    knn_train = []
+    knn_val = []
+    depth = []
+    # Range of 2-21 and each value inbetween
+    for i in range(2, 51):
+         # KNN Classifier
+        knn = KNeighborsClassifier(n_neighbors=i, weights='uniform')
+        #fitting the model
+        knn.fit(X_train, y_train)
+        #y_pred array from prediciting X_train
+        y_pred = knn.predict(X_train)
+        #probability of y_pred array from prediciting X_train
+        y_pred_proba = knn.predict_proba(X_train)
+        #adding values to depth list
+        depth.append(i)
+        # adding values to knn_train and knn.val lists
+        knn_train.append(knn.score(X_train, y_train))
+        knn_val.append(knn.score(X_val, y_val))
+    # knn_scores DataFrame
+    knn_scores = pd.DataFrame({'score':knn_train,
+                                   'type':'train',
+                                   'depth':depth})
+    #val_knn_scores DataFrame
+    val_knn_scores = pd.DataFrame({'score':knn_val,
+                                       'type':'val',
+                                       'depth':depth})
+    # Knn scores values added to val_knn_scores DataFrame
+    knn_scores = knn_scores.append(val_knn_scores)
+    # Creating the acc_dataframe from values of above DataFrames
+    acc_df= pd.DataFrame(
+            {'train_depth': knn_scores.depth[0:49], 
+             'val_depth' : val_knn_scores.depth[0:49],
+             'train_knn_score': knn_scores.score.values[0:49],
+            'val_knn_score': val_knn_scores.score.values[0:49]
+                  })
+    # plot f, ax
+    f, ax=plt.subplots(1,1)
+    #setting the title of chart
+    plt.title("KNN Scores Accuracy with Depth")
+    # plotting the data
+    sns.pointplot(x='train_depth', y='train_knn_score', data=acc_df, color='royalblue', label='Train')
+    sns.pointplot(x='val_depth', y='val_knn_score', data=acc_df, color='seagreen', label='Val')
+    # setting the labels
+    plt.xlabel('Depth')
+    plt.ylabel('Score')
+    plt.xlim(0, 20)
+    ax.legend()
+    #Showing the graph
+    plt.show()
+
+
+# # Model Function
+
+# In[24]:
+
+
+def model_function_train_val(X_train, y_train, X_val, y_val):
+    '''
+    Function that returns the plot the accuracy of each model with the x/y train and x/y validate
+    '''
+    rfc = random_for_class(X_train, y_train, X_val, y_val)
+    logreg= log_reg_class(X_train, y_train, X_val, y_val)
+    knn = knn_scores(X_train, y_train, X_val, y_val)
+    
+
+
+# # Test Scores
+
+# In[25]:
+
+
+def test_score(X_train, y_train, X_test, y_test):
+    '''
+    Test Score function that 
+    shows the Test Score Accuracy from XGB Classifier
+    '''
+    # XGB Boost Classifer
+    xgb = XGBClassifier(objective='multi:softmax',
+                           seed=42,
+                           max_depth=8,
+                           learning_rate=.2,
+                           gamma=.5,
+                           reg_alpha=.75,
+                           reg_lambda=.25,
+                           min_child_weight=5,
+                           max_leaves=4,
+                           subsample=.6,
+                           n_estimators=300)
+
+    xgb.fit(X_train, y_train)
+    
+    # fitting the model on the x/y-train
+    xgb.fit(X_train, y_train)
+    # Score of the x/y-test
+    score= xgb.score(X_test, y_test)
+    #returning the score
+    return score
+
+
+# # Test Against Baseline function
+
+# In[26]:
+
+
+def test_baseline(X_train, y_train, X_test, y_test):
+    '''
+    Test Score Against Baseline function that 
+    shows the plot of the Test Score Accuracy from RFC to our Baseline Model
+    '''
+    # Creating DataFrame of test score and baseline columns and values
+    test_base_df=pd.DataFrame({'Test Score': [test_score(X_train, y_train, X_test, y_test)],
+                          'Baseline': [baseline]})
+    # plot f, ax
+    f, ax = plt.subplot()
+    #Setting the title of chart
+    plt.title("Test Score Against Baseline Score")
+    # plotting the data
+    sns.barplot(data=test_base_df, palette='viridis')
+    # setting the labels
+    plt.ylabel('Score')
+    #Showing the graph
+    plt.show()
 
